@@ -58,7 +58,7 @@ jobs:
         zip -r code.zip .
         aws lambda update-function-code \
           --function-name lambda-nodejs-poc \
-          --zip-file fileb://src/code.zip
+          --zip-file fileb://code.zip
 
     - name: Update Lambda function configuration
       run: |
@@ -66,4 +66,3 @@ jobs:
         aws lambda update-function-configuration \
           --function-name lambda-nodejs-poc \
           --layers $LAYER_ARN
-
