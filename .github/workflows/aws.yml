@@ -17,6 +17,12 @@ jobs:
       matrix:
         node-version: [20.x]
 
+    environment: Develop
+    env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.POC_AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.POC_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: us-east-2
+
     steps:
     - uses: actions/checkout@v4
     - name: Use Node.js ${{ matrix.node-version }}
@@ -33,16 +39,19 @@ jobs:
       run: |
         zip -r layer.zip node_modules
 
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_DEFAULT_REGION }}
+
     - name: Upload Lambda layer to AWS
       run: |
         aws lambda publish-layer-version \
           --layer-name lambda-nodejs-layer-poc \
           --zip-file fileb://layer.zip \
           --compatible-runtimes nodejs20.x
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.POC_AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.POC_SECRET_ACCESS_KEY }}
-        AWS_DEFAULT_REGION: us-east-2
 
     - name: Package and deploy Lambda function
       run: |
@@ -51,10 +60,6 @@ jobs:
         aws lambda update-function-code \
           --function-name lambda-nodejs-poc \
           --zip-file fileb://code.zip
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.POC_AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.POC_SECRET_ACCESS_KEY }}
-        AWS_DEFAULT_REGION: us-east-2
 
     - name: Update Lambda function configuration
       run: |
@@ -62,7 +67,4 @@ jobs:
         aws lambda update-function-configuration \
           --function-name lambda-nodejs-poc \
           --layers $LAYER_ARN
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.POC_AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.POC_SECRET_ACCESS_KEY }}
-        AWS_DEFAULT_REGION: us-east-2
+
