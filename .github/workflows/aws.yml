@@ -63,7 +63,7 @@ jobs:
 
     - name: Update Lambda function configuration
       run: |
-        LAYER_ARN=$(aws lambda list-layers --query "Layers[?LayerName=='${{ env.LAMBDA_FUNCTION_NAME }}'].LatestMatchingVersion.LayerVersionArn" --output text)
+        LAYER_ARN=$(aws lambda list-layers --query "Layers[?LayerName=='${{ env.LAMBDA_LAYER_NAME }}'].LatestMatchingVersion.LayerVersionArn" --output text)
         aws lambda update-function-configuration \
           --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
           --layers $LAYER_ARN
