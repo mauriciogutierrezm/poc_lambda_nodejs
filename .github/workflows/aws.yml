@@ -21,7 +21,6 @@ jobs:
     env:
         AWS_ACCESS_KEY_ID: ${{ secrets.POC_AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.POC_SECRET_ACCESS_KEY }}
-        AWS_DEFAULT_REGION: us-east-2
 
     steps:
     - uses: actions/checkout@v4
@@ -44,7 +43,7 @@ jobs:
       with:
         aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ env.AWS_DEFAULT_REGION }}
+        aws-region: us-east-2
 
     - name: Upload Lambda layer to AWS
       run: |
@@ -59,7 +58,7 @@ jobs:
         zip -r code.zip .
         aws lambda update-function-code \
           --function-name lambda-nodejs-poc \
-          --zip-file fileb://code.zip
+          --zip-file fileb://src/code.zip
 
     - name: Update Lambda function configuration
       run: |
