@@ -44,7 +44,9 @@ jobs:
     
     - name: Create Lambda layer package
       run: |
-        zip -r layer.zip node_modules
+        mkdir -p nodejs
+        mv node_modules nodejs/
+        zip -r layer.zip nodejs
 
     - name: Upload Lambda layer to AWS
       run: |
