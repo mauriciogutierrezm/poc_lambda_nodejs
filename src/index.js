@@ -1,14 +1,8 @@
 const app = require('./app');
+const serverless = require('serverless-http');
 
-exports.handler = async (event) => {
-  const result = await new Promise((resolve) => {
-    app.handle(event, null, (res) => {
-      resolve({
-        statusCode: res.statusCode,
-        headers: res._headers,
-        body: res.body,
-      });
-    });
-  });
-  return result;
+const handler = serverless(app);
+
+exports.handler = async (event, context) => {
+  return await handler(event, context);
 };

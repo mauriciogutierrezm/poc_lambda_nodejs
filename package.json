@@ -19,6 +19,6 @@
   },
   "homepage": "https://github.com/mauriciogutierrezm/poc_lambda_nodejs#readme",
   "dependencies": {
-    "express": "^4.19.2"
+    "serverless-http": "^3.2.0"
   }
 }
