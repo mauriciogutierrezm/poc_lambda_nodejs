@@ -1,0 +1,71 @@
+name: Deploy Lambda function to AWS
+
+on:
+  push:
+    branches: [ "develop" ]
+  pull_request:
+    branches: [ "develop" ]
+
+permissions:
+  contents: read 
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [20.x]
+
+    environment: Develop
+    env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.POC_AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.POC_AWS_SECRET_ACCESS_KEY }}
+        LAMBDA_FUNCTION_NAME: 'lambda-nodejs-poc'
+        LAMBDA_LAYER_NAME: 'lambda-nodejs-layer-poc'
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm install
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-2
+    
+    - name: Create Lambda layer package
+      run: |
+        mkdir -p nodejs
+        mv node_modules nodejs/
+        zip -r layer.zip nodejs
+
+    - name: Upload Lambda layer to AWS
+      run: |
+        aws lambda publish-layer-version \
+          --layer-name ${{ env.LAMBDA_LAYER_NAME }} \
+          --zip-file fileb://layer.zip \
+          --compatible-runtimes nodejs20.x
+
+    - name: Package and deploy Lambda function
+      run: |
+        cd src
+        zip -r code.zip .
+        aws lambda update-function-code \
+          --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
+          --zip-file fileb://code.zip
+
+    - name: Update Lambda function configuration
+      run: |
+        LAYER_ARN=$(aws lambda list-layers --query "Layers[?LayerName=='${{ env.LAMBDA_LAYER_NAME }}'].LatestMatchingVersion.LayerVersionArn" --output text)
+        aws lambda update-function-configuration \
+          --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
+          --layers $LAYER_ARN
